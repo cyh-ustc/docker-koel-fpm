@@ -2,8 +2,9 @@
 
 set -e
 
+rsync -av --exclude 'public/img/covers/*' /tmp/koel/ /var/www/koel
 # Change to program root directory.
-cd /var/www/html
+cd /var/www/koel
 
 # Fix permissions for the cache directory because running php artisan koel:sync can set them to root
 mkdir -p storage/framework/cache/data/

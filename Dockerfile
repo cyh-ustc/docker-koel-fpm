@@ -37,11 +37,12 @@ RUN curl -L https://github.com/koel/koel/releases/download/${KOEL_VERSION_REF}/k
     yarn.lock
 
 # The runtime image.
-FROM php:8.0.3-apache-buster
+FROM php:fpm
 
 # Install koel runtime dependencies.
 RUN apt-get update && \
   apt-get install --yes --no-install-recommends \
+    rsync \
     libapache2-mod-xsendfile \
     libzip-dev \
     zip \
@@ -62,36 +63,24 @@ RUN apt-get update && \
   && mkdir /music \
   && chown www-data:www-data /music
 
-# Copy Apache configuration
-COPY ./apache.conf /etc/apache2/sites-available/000-default.conf
-
 # Copy php.ini
 COPY ./php.ini "$PHP_INI_DIR/php.ini"
 # /usr/local/etc/php/php.ini
 
-# Deploy Apache configuration
-RUN a2enmod rewrite
-
 # Copy the downloaded release
-COPY --from=release-downloader --chown=www-data:www-data /tmp/koel /var/www/html
+COPY --from=release-downloader --chown=www-data:www-data /tmp/koel /tmp/koel
 
 # Volumes for the music files and search index
 # This declaration must be AFTER creating the folders and setting their permissions
 # and AFTER changing to non-root user.
 # Otherwise, they are owned by root and the user cannot write to them.
-VOLUME ["/music", "/var/www/html/storage/search-indexes"]
+VOLUME ["/music", "/var/www/koel/storage/search-indexes", "/var/www/koel"]
 
 ENV FFMPEG_PATH=/usr/bin/ffmpeg \
     MEDIA_PATH=/music \
-    STREAMING_METHOD=x-sendfile
+    STREAMING_METHOD=x-accel-redirect
 
 # Setup bootstrap script.
 COPY koel-entrypoint /usr/local/bin/
 ENTRYPOINT ["koel-entrypoint"]
-CMD ["apache2-foreground"]
-
-EXPOSE 80
-
-# Check that the homepage is displayed
-HEALTHCHECK --interval=5m --timeout=5s \
-  CMD curl -f http://localhost/ || exit 1
+CMD ["php-fpm"]
