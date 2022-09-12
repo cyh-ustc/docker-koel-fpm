@@ -93,8 +93,19 @@ nginx conf
 
 ```bash
 server {
-  listen          *:80;
-  server_name     koel.xxx.yyy.zzz;
+    listen 80;
+    server_name koel.xxx.yyy.zzz;
+    return 301 https://$server_name:443$request_uri;
+}
+server {
+    listen 443;
+    server_name koel.xxx.yyy.zzz;
+    ssl on;
+    ssl_certificate  YOURKEYFILE;
+    ssl_certificate_key  YOURKEYFILE;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2; # Dropping SSLv3, ref: POODLE
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
   root            /var/www/koel/public;
   index           index.php;
 
@@ -107,8 +118,6 @@ server {
 
     alias       $upstream_http_x_media_root;
 
-    access_log /var/log/nginx/koel.access.log;
-    error_log  /var/log/nginx/koel.error.log;
   }
 
   location / {
