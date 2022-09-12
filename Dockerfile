@@ -2,7 +2,7 @@
 FROM php:fpm
 
 # The koel version to download
-ARG KOEL_VERSION_REF=v6.0.5
+ARG KOEL_VERSION_REF=v6.0.6
 
 # Install vim for easier editing/debugging
 RUN apt-get update && apt-get install -y vim
