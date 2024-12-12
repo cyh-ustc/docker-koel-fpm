@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  koel:
+    image: koel:7.2.0-fpm
+    user: root
+    environment:
+      - DB_CONNECTION=sqlite-e2e
+      - DB_HOST=
+      - DB_USERNAME=
+      - DB_PASSWORD=
+      - DB_DATABASE=/music/koel.sqlite
+    volumes:
+      - music:/music
+      - pages:/var/www/koel
+
+  nginx:
+    image: nginx
+    ports:
+      - 8012:80
+    volumes:
+      - music:/music
+      - pages:/var/www/koel
+      - ${PWD}/nginx-confd:/etc/nginx/conf.d
+    restart: always
+volumes:
+  music:
+    driver: local
+  pages:
+    driver: local

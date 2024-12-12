@@ -61,12 +61,12 @@ RUN apt-get update \
     pgsql \
     zip \
   && apt-get clean \
-  # Create the music volume so it has the correct permissions
+  # Create the music volume
   && mkdir /music \
-  && chown www-data:www-data /music \
-  # Create the search-indexes volume so it has the correct permissions
+  # Create empty sqlite database
+  && touch /music/koel.sqlite \
+  # Create the search-indexes volume
   && mkdir -p /var/www/koel/storage/search-indexes \
-  && chown www-data:www-data /var/www/koel/storage/search-indexes \
   # Set locale to prevent removal of non-ASCII path characters when transcoding with ffmpeg
   # See https://github.com/koel/docker/pull/91
   && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
@@ -77,15 +77,13 @@ COPY ./php.ini "$PHP_INI_DIR/php.ini"
 # /usr/local/etc/php/php.ini
 
 # Copy the downloaded release
-RUN chown -R www-data:www-data /tmp/koel/ \
-  && mkdir -p /var/www/koel \
-  && chown -R www-data:www-data /var/www/koel
+RUN cp -R /tmp/koel/. /var/www/koel
 
 # Volumes for the music files and search index
 # This declaration must be AFTER creating the folders and setting their permissions
 # and AFTER changing to non-root user.
 # Otherwise, they are owned by root and the user cannot write to them.
-VOLUME ["/music", "/var/www/koel/storage/search-indexes"]
+VOLUME ["/music", "/var/www/koel"]
 
 ENV FFMPEG_PATH=/usr/bin/ffmpeg \
     MEDIA_PATH=/music \
@@ -102,3 +100,5 @@ CMD ["php-fpm"]
 # Check that the homepage is displayed
 HEALTHCHECK --interval=5m --timeout=5s \
   CMD curl -f http://localhost:9000/sw.js || exit 1
+
+WORKDIR /var/www/koel
