@@ -2,7 +2,6 @@
 
 set -e
 
-rsync -av --exclude 'public/img/covers/*' /tmp/koel/ /var/www/koel
 # Change to program root directory.
 cd /var/www/koel
 
